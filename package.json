@@ -1,0 +1,23 @@
+{
+  "name": "@lazylingo/core",
+  "version": "0.0.1",
+  "description": "Shared core: GitHub vault sync, dictionary lookup, SRS scheduler, shared types",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src --fix",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.3",
+    "vitest": "^4.0.17",
+    "@vitest/coverage-v8": "^4.0.17"
+  }
+}
