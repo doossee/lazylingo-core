@@ -15,6 +15,7 @@ export async function lookup(
   return {
     word: dict.word,
     phonetic: dict.phonetic,
+    audioUrl: dict.audioUrl,
     sourceLang,
     targetLang,
     posSections: sections,

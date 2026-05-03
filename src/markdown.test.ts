@@ -49,4 +49,12 @@ describe("markdown", () => {
     const parsed = fromMarkdown(crlf);
     expect(parsed).toEqual(sample);
   });
+
+  it("round-trips audioUrl when set", () => {
+    const withAudio: Flashcard = {
+      ...sample,
+      lookup: { ...sample.lookup, audioUrl: "https://example.com/audio.mp3" },
+    };
+    expect(fromMarkdown(toMarkdown(withAudio))).toEqual(withAudio);
+  });
 });
