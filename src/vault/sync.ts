@@ -1,7 +1,7 @@
 import type { Flashcard, Grade, VaultConfig } from "../types.js";
 import { fromMarkdown, toMarkdown } from "../markdown.js";
 import { schedule } from "../srs.js";
-import { ConflictError, getFile, listDir, putFile } from "./github-api.js";
+import { ConflictError, deleteFile, getFile, listDir, putFile } from "./github-api.js";
 
 export class Vault {
   constructor(private cfg: VaultConfig) {}
@@ -22,6 +22,20 @@ export class Vault {
   async listCards(): Promise<string[]> {
     const names = await listDir(this.cfg, "cards");
     return names.filter((n) => n.endsWith(".md")).map((n) => n.slice(0, -3));
+  }
+
+  async deleteCard(word: string): Promise<void> {
+    const path = pathFor(word);
+    const file = await getFile(this.cfg, path);
+    if (!file) return;
+    try {
+      await deleteFile(this.cfg, path, `delete ${word}`, file.sha);
+    } catch (e) {
+      if (e instanceof ConflictError) {
+        return this.deleteCard(word);
+      }
+      throw e;
+    }
   }
 
   async updateSRS(word: string, grade: Grade, now: string): Promise<Flashcard> {

@@ -95,7 +95,36 @@ describe("putFile", () => {
   });
 });
 
-import { listDir } from "./github-api.js";
+import { deleteFile, listDir } from "./github-api.js";
+
+describe("deleteFile", () => {
+  it("DELETEs the file with the right body and returns void", async () => {
+    let body: string | null = null;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string, init?: RequestInit) => {
+        expect(init?.method).toBe("DELETE");
+        body = init?.body as string;
+        return new Response("{}", { status: 200 });
+      }),
+    );
+    await deleteFile(config, "cards/drive.md", "remove drive", "OLDSHA");
+    const parsed = JSON.parse(body!);
+    expect(parsed.message).toBe("remove drive");
+    expect(parsed.sha).toBe("OLDSHA");
+    expect(parsed.branch).toBe("main");
+  });
+
+  it("treats 404 as already-deleted (returns void without throwing)", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { status: 404 })));
+    await expect(deleteFile(config, "cards/missing.md", "msg", "SHA")).resolves.toBeUndefined();
+  });
+
+  it("throws ConflictError on 409", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { status: 409 })));
+    await expect(deleteFile(config, "cards/x.md", "m", "S")).rejects.toBeInstanceOf(ConflictError);
+  });
+});
 
 describe("listDir", () => {
   it("listDir filters out non-file entries", async () => {
