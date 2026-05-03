@@ -59,6 +59,27 @@ export async function listDir(cfg: VaultConfig, path: string): Promise<string[]>
     .map((e) => e.name);
 }
 
+export async function deleteFile(
+  cfg: VaultConfig,
+  path: string,
+  message: string,
+  sha: string,
+): Promise<void> {
+  const url = `${API}/repos/${cfg.owner}/${cfg.repo}/contents/${encodePath(path)}`;
+  const res = await fetch(url, {
+    method: "DELETE",
+    headers: { ...ghHeaders(cfg), "Content-Type": "application/json" },
+    body: JSON.stringify({
+      message,
+      sha,
+      branch: branchOf(cfg),
+    }),
+  });
+  if (res.status === 404) return;
+  if (res.status === 409 || res.status === 422) throw new ConflictError();
+  if (!res.ok) throw new Error(`github delete ${res.status}`);
+}
+
 function ghHeaders(cfg: VaultConfig) {
   return {
     Authorization: `Bearer ${cfg.token}`,

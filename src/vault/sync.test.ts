@@ -7,6 +7,7 @@ vi.mock("./github-api.js", () => ({
   getFile: vi.fn(),
   putFile: vi.fn(),
   listDir: vi.fn(),
+  deleteFile: vi.fn(),
   ConflictError: class ConflictError extends Error {},
 }));
 
@@ -93,6 +94,46 @@ describe("Vault.updateSRS", () => {
     expect(getCalls).toBe(2);
     expect(putCalls).toBe(2);
     expect(result.srs.repetitions).toBe(1);
+  });
+});
+
+describe("Vault.deleteCard", () => {
+  it("deletes an existing card with its sha", async () => {
+    vi.mocked(gh.getFile).mockResolvedValue({ content: toMarkdown(card), sha: "EXISTING" });
+    vi.mocked(gh.deleteFile).mockResolvedValue(undefined);
+
+    const v = new Vault(cfg);
+    await v.deleteCard("drive");
+
+    expect(gh.deleteFile).toHaveBeenCalledOnce();
+    const call = vi.mocked(gh.deleteFile).mock.calls[0];
+    expect(call[1]).toBe("cards/drive.md");
+    expect(call[3]).toBe("EXISTING");
+  });
+
+  it("returns silently when the card does not exist", async () => {
+    vi.mocked(gh.getFile).mockResolvedValue(null);
+    const v = new Vault(cfg);
+    await expect(v.deleteCard("nope")).resolves.toBeUndefined();
+    expect(gh.deleteFile).not.toHaveBeenCalled();
+  });
+
+  it("retries on ConflictError with a fresh sha", async () => {
+    let getCalls = 0;
+    vi.mocked(gh.getFile).mockImplementation(async () => {
+      getCalls++;
+      return { content: toMarkdown(card), sha: getCalls === 1 ? "STALE" : "FRESH" };
+    });
+    let delCalls = 0;
+    vi.mocked(gh.deleteFile).mockImplementation(async () => {
+      delCalls++;
+      if (delCalls === 1) throw new gh.ConflictError();
+    });
+
+    const v = new Vault(cfg);
+    await v.deleteCard("drive");
+    expect(getCalls).toBe(2);
+    expect(delCalls).toBe(2);
   });
 });
 
