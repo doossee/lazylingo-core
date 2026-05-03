@@ -7,10 +7,11 @@ export async function lookup(
   sourceLang: string,
   targetLang: string,
   now: string,
+  email?: string,
 ): Promise<LookupResult> {
   // Branch 1: non-English source — skip Free Dict (English-only API), fall back to MyMemory only.
   if (sourceLang !== "en") {
-    const translation = await translate(word, sourceLang, targetLang);
+    const translation = await translate(word, sourceLang, targetLang, email);
     return {
       word,
       sourceLang,
@@ -42,7 +43,7 @@ export async function lookup(
 
   // Branch 3: English → other — translate each sense + each example.
   const sections = await Promise.all(
-    dict.posSections.map(async (section) => decorateSection(section, sourceLang, targetLang)),
+    dict.posSections.map(async (section) => decorateSection(section, sourceLang, targetLang, email)),
   );
   return {
     word: dict.word,
@@ -59,20 +60,26 @@ async function decorateSection(
   section: PosSection,
   source: string,
   target: string,
+  email?: string,
 ): Promise<PosSection> {
   const senses = await Promise.all(
-    section.senses.map(async (sense) => decorateSense(sense, source, target)),
+    section.senses.map(async (sense) => decorateSense(sense, source, target, email)),
   );
   return { ...section, senses };
 }
 
-async function decorateSense(sense: Sense, source: string, target: string): Promise<Sense> {
+async function decorateSense(
+  sense: Sense,
+  source: string,
+  target: string,
+  email?: string,
+): Promise<Sense> {
   const [translation, examples] = await Promise.all([
-    translate(sense.definition, source, target),
+    translate(sense.definition, source, target, email),
     Promise.all(
       sense.examples.map(async (ex) => ({
         source: ex.source,
-        translated: await translate(ex.source, source, target),
+        translated: await translate(ex.source, source, target, email),
       })),
     ),
   ]);
