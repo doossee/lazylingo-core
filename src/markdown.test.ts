@@ -42,4 +42,11 @@ describe("markdown", () => {
   it("throws if input lacks frontmatter", () => {
     expect(() => fromMarkdown("# drive\nno frontmatter")).toThrow(/missing frontmatter/);
   });
+
+  it("round-trips when the input uses CRLF line endings (Windows clone)", () => {
+    const md = toMarkdown(sample);
+    const crlf = md.replace(/\n/g, "\r\n");
+    const parsed = fromMarkdown(crlf);
+    expect(parsed).toEqual(sample);
+  });
 });

@@ -9,12 +9,15 @@ export function toMarkdown(card: Flashcard): string {
 }
 
 export function fromMarkdown(md: string): Flashcard {
-  if (!md.startsWith(FRONTMATTER_DELIM)) {
+  // Normalize CRLF → LF so files round-trip cleanly when cloned on Windows
+  // with autocrlf=true. The serializer always writes LF.
+  const normalized = md.replace(/\r\n/g, "\n");
+  if (!normalized.startsWith(FRONTMATTER_DELIM)) {
     throw new Error("missing frontmatter");
   }
-  const end = md.indexOf(`\n${FRONTMATTER_DELIM}`, FRONTMATTER_DELIM.length);
+  const end = normalized.indexOf(`\n${FRONTMATTER_DELIM}`, FRONTMATTER_DELIM.length);
   if (end === -1) throw new Error("unterminated frontmatter");
-  const json = md.slice(FRONTMATTER_DELIM.length, end).trim();
+  const json = normalized.slice(FRONTMATTER_DELIM.length, end).trim();
   return JSON.parse(json) as Flashcard;
 }
 
