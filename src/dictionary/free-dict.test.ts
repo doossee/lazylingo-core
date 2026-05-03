@@ -70,4 +70,51 @@ describe("fetchFreeDict", () => {
     );
     await expect(fetchFreeDict("drive")).rejects.toThrow(/network down/);
   });
+
+  it("picks the first non-empty audio URL from the phonetics array", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify([
+            {
+              word: "drive",
+              phonetic: "/draɪv/",
+              phonetics: [
+                { text: "/drʌɪv/", audio: "" },
+                { text: "/draɪv/", audio: "https://example.com/drive-us.mp3" },
+              ],
+              meanings: [],
+            },
+          ]),
+          { status: 200 },
+        ),
+      ),
+    );
+
+    const result = await fetchFreeDict("drive");
+    expect(result.audioUrl).toBe("https://example.com/drive-us.mp3");
+  });
+
+  it("audioUrl is undefined when no phonetics entry has audio", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify([
+            {
+              word: "drive",
+              phonetic: "/draɪv/",
+              phonetics: [{ text: "/drʌɪv/", audio: "" }],
+              meanings: [],
+            },
+          ]),
+          { status: 200 },
+        ),
+      ),
+    );
+
+    const result = await fetchFreeDict("drive");
+    expect(result.audioUrl).toBeUndefined();
+  });
 });

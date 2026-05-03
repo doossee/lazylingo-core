@@ -11,12 +11,14 @@ interface RawMeaning {
 interface RawEntry {
   word: string;
   phonetic?: string;
+  phonetics?: { text?: string; audio?: string }[];
   meanings: RawMeaning[];
 }
 
 export interface FreeDictResult {
   word: string;
   phonetic?: string;
+  audioUrl?: string;
   posSections: PosSection[];
 }
 
@@ -45,6 +47,7 @@ export async function fetchFreeDict(word: string): Promise<FreeDictResult> {
     word: first.word,
     phonetic: first.phonetic,
     posSections: first.meanings.map(normalizeMeaning),
+    audioUrl: first.phonetics?.find((p) => p.audio && p.audio.trim().length > 0)?.audio,
   };
 }
 

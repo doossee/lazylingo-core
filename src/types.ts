@@ -32,6 +32,7 @@ export interface PosSection {
 export interface LookupResult {
   word: string;
   phonetic?: string;
+  audioUrl?: string;
   sourceLang: string;
   targetLang: string;
   posSections: PosSection[];

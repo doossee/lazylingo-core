@@ -35,4 +35,16 @@ describe("lookup", () => {
     expect(r.sourceLang).toBe("en");
     expect(r.targetLang).toBe("ru");
   });
+
+  it("propagates audioUrl from free-dict", async () => {
+    const { fetchFreeDict } = await import("./free-dict.js");
+    vi.mocked(fetchFreeDict).mockResolvedValueOnce({
+      word: "drive",
+      phonetic: "/draɪv/",
+      audioUrl: "https://example.com/x.mp3",
+      posSections: [],
+    });
+    const r = await lookup("drive", "en", "ru", "2026-05-02T00:00:00.000Z");
+    expect(r.audioUrl).toBe("https://example.com/x.mp3");
+  });
 });
