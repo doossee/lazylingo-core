@@ -1,5 +1,7 @@
 # @lazylingo/core
 
+[![CI](https://github.com/doossee/lazylingo-core/actions/workflows/ci.yml/badge.svg)](https://github.com/doossee/lazylingo-core/actions/workflows/ci.yml)
+
 Shared TypeScript core for LazyLingo. Consumed by `lazylingo-app` (PWA + Tauri) and `lazylingo-extension`.
 
 Implementation follows in Plan 2 of the LazyLingo refactor — see `LazyLingo/docs/superpowers/plans/`.
