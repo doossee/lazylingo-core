@@ -3,6 +3,7 @@ import type { PartOfSpeech, PosSection } from "../types.js";
 interface RawDefinition {
   definition: string;
   example?: string;
+  synonyms?: string[];
 }
 interface RawMeaning {
   partOfSpeech: string;
@@ -64,6 +65,7 @@ function normalizeMeaning(m: RawMeaning): PosSection {
     senses: m.definitions.map((d) => ({
       definition: d.definition,
       examples: d.example ? [{ source: d.example }] : [],
+      synonyms: d.synonyms && d.synonyms.length > 0 ? d.synonyms : undefined,
     })),
   };
 }

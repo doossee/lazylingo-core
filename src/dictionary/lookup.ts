@@ -8,7 +8,39 @@ export async function lookup(
   targetLang: string,
   now: string,
 ): Promise<LookupResult> {
+  // Branch 1: non-English source — skip Free Dict (English-only API), fall back to MyMemory only.
+  if (sourceLang !== "en") {
+    const translation = await translate(word, sourceLang, targetLang);
+    return {
+      word,
+      sourceLang,
+      targetLang,
+      fetchedAt: now,
+      posSections: [
+        {
+          pos: "other",
+          senses: [{ definition: word, translation, examples: [] }],
+        },
+      ],
+    };
+  }
+
   const dict = await fetchFreeDict(word);
+
+  // Branch 2: English → English — skip MyMemory (no translation needed).
+  if (targetLang === "en") {
+    return {
+      word: dict.word,
+      phonetic: dict.phonetic,
+      audioUrl: dict.audioUrl,
+      sourceLang,
+      targetLang,
+      posSections: dict.posSections,
+      fetchedAt: now,
+    };
+  }
+
+  // Branch 3: English → other — translate each sense + each example.
   const sections = await Promise.all(
     dict.posSections.map(async (section) => decorateSection(section, sourceLang, targetLang)),
   );
