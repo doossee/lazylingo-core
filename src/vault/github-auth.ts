@@ -1,5 +1,4 @@
-const DEVICE_CODE_URL = "https://github.com/login/device/code";
-const ACCESS_TOKEN_URL = "https://github.com/login/oauth/access_token";
+const DEFAULT_BASE = "https://github.com";
 
 export interface DeviceCodeRequest {
   deviceCode: string;
@@ -12,8 +11,9 @@ export interface DeviceCodeRequest {
 export async function requestDeviceCode(
   clientId: string,
   scope: string,
+  baseUrl: string = DEFAULT_BASE,
 ): Promise<DeviceCodeRequest> {
-  const res = await fetch(DEVICE_CODE_URL, {
+  const res = await fetch(`${baseUrl}/login/device/code`, {
     method: "POST",
     headers: { Accept: "application/json", "Content-Type": "application/json" },
     body: JSON.stringify({ client_id: clientId, scope }),
@@ -38,17 +38,20 @@ export type SleepFn = (ms: number) => Promise<void>;
  * no internal time-bound. Callers that want a hard cap can wrap the call
  * with `Promise.race` or pass an aborting `sleep`.
  *
- * `sleep` is injected so tests can run without real waits.
+ * `sleep` is injected so tests can run without real waits. Pass `baseUrl` to
+ * route through a CORS proxy (e.g. a Cloudflare Worker) instead of hitting
+ * `github.com` directly from a browser context.
  */
 export async function pollForToken(
   clientId: string,
   deviceCode: string,
   intervalSec: number,
   sleep: SleepFn = (ms) => new Promise((r) => setTimeout(r, ms)),
+  baseUrl: string = DEFAULT_BASE,
 ): Promise<string> {
   let interval = intervalSec;
   for (;;) {
-    const res = await fetch(ACCESS_TOKEN_URL, {
+    const res = await fetch(`${baseUrl}/login/oauth/access_token`, {
       method: "POST",
       headers: { Accept: "application/json", "Content-Type": "application/json" },
       body: JSON.stringify({

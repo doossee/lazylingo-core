@@ -69,3 +69,45 @@ describe("pollForToken", () => {
     );
   });
 });
+
+describe("requestDeviceCode with custom baseUrl", () => {
+  it("posts to <baseUrl>/login/device/code when baseUrl is provided", async () => {
+    let observed = "";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        observed = url;
+        return new Response(
+          JSON.stringify({
+            device_code: "DC",
+            user_code: "ABCD",
+            verification_uri: "https://github.com/login/device",
+            expires_in: 900,
+            interval: 5,
+          }),
+          { status: 200 },
+        );
+      }),
+    );
+    await requestDeviceCode("CLIENT", "repo", "https://proxy.example.com");
+    expect(observed).toBe("https://proxy.example.com/login/device/code");
+  });
+});
+
+describe("pollForToken with custom baseUrl", () => {
+  it("posts to <baseUrl>/login/oauth/access_token when baseUrl is provided", async () => {
+    let observed = "";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        observed = url;
+        return new Response(
+          JSON.stringify({ access_token: "TOKEN" }),
+          { status: 200 },
+        );
+      }),
+    );
+    await pollForToken("CLIENT", "DC", 1, async () => {}, "https://proxy.example.com");
+    expect(observed).toBe("https://proxy.example.com/login/oauth/access_token");
+  });
+});
