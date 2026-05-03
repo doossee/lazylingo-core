@@ -81,12 +81,31 @@ describe("lookup", () => {
 
     const r = await lookup("привет", "ru", "en", "2026-05-03T00:00:00.000Z");
     expect(fetchFreeDict).not.toHaveBeenCalled();
-    expect(translate).toHaveBeenCalledWith("привет", "ru", "en");
+    expect(translate).toHaveBeenCalledWith("привет", "ru", "en", undefined);
     expect(r.word).toBe("привет");
     expect(r.sourceLang).toBe("ru");
     expect(r.targetLang).toBe("en");
     expect(r.posSections).toHaveLength(1);
     expect(r.posSections[0].pos).toBe("other");
     expect(r.posSections[0].senses[0].translation).toBe("hello");
+  });
+
+  it("propagates email into MyMemory translate calls", async () => {
+    vi.mocked(fetchFreeDict).mockResolvedValue({
+      word: "drive",
+      posSections: [
+        {
+          pos: "verb",
+          senses: [
+            { definition: "to operate", examples: [] },
+          ],
+        },
+      ],
+    });
+    vi.mocked(translate).mockResolvedValue("translated");
+
+    await lookup("drive", "en", "ru", "2026-05-03T00:00:00.000Z", "user@example.com");
+
+    expect(translate).toHaveBeenCalledWith("to operate", "en", "ru", "user@example.com");
   });
 });

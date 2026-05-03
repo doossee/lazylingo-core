@@ -55,4 +55,38 @@ describe("translate", () => {
     );
     await expect(translate("hello", "en", "ru")).rejects.toThrow(/mymemory status 429 \(en->ru\)/);
   });
+
+  it("appends de= when an email is provided", async () => {
+    let observedUrl = "";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        observedUrl = url;
+        return new Response(
+          JSON.stringify({ responseData: { translatedText: "привет" }, responseStatus: 200 }),
+          { status: 200 },
+        );
+      }),
+    );
+
+    await translate("hello", "en", "ru", "user@example.com");
+    expect(observedUrl).toContain("de=user%40example.com");
+  });
+
+  it("omits de= when email is undefined", async () => {
+    let observedUrl = "";
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        observedUrl = url;
+        return new Response(
+          JSON.stringify({ responseData: { translatedText: "x" }, responseStatus: 200 }),
+          { status: 200 },
+        );
+      }),
+    );
+
+    await translate("hello", "en", "ru");
+    expect(observedUrl).not.toContain("de=");
+  });
 });
