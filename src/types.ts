@@ -22,6 +22,7 @@ export interface Sense {
   definition: string;
   translation?: string;
   examples: Example[];
+  synonyms?: string[];
 }
 
 export interface PosSection {

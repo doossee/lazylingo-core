@@ -117,4 +117,59 @@ describe("fetchFreeDict", () => {
     const result = await fetchFreeDict("drive");
     expect(result.audioUrl).toBeUndefined();
   });
+
+  it("captures synonyms when Free Dictionary includes them", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify([
+            {
+              word: "drive",
+              meanings: [
+                {
+                  partOfSpeech: "verb",
+                  definitions: [
+                    {
+                      definition: "to operate a vehicle",
+                      synonyms: ["operate", "steer"],
+                    },
+                  ],
+                },
+              ],
+            },
+          ]),
+          { status: 200 },
+        ),
+      ),
+    );
+
+    const result = await fetchFreeDict("drive");
+    expect(result.posSections[0].senses[0].synonyms).toEqual(["operate", "steer"]);
+  });
+
+  it("synonyms is undefined when not present", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify([
+            {
+              word: "drive",
+              meanings: [
+                {
+                  partOfSpeech: "verb",
+                  definitions: [{ definition: "to operate a vehicle" }],
+                },
+              ],
+            },
+          ]),
+          { status: 200 },
+        ),
+      ),
+    );
+
+    const result = await fetchFreeDict("drive");
+    expect(result.posSections[0].senses[0].synonyms).toBeUndefined();
+  });
 });
